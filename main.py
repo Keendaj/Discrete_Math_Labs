@@ -19,7 +19,6 @@ def get_median(frequencies: List[Tuple[str, int]], start: int, end: int) -> int:
     sum_right = frequencies[end - 1][1]
     m = end - 1
     best_diff = abs(sum_left - sum_right)
-    best_m = m
     
     while m > start:
         m -= 1
@@ -33,10 +32,9 @@ def get_median(frequencies: List[Tuple[str, int]], start: int, end: int) -> int:
         
         if current_diff < best_diff:
             best_diff = current_diff
-            best_m = m
         else:
             break
-    return best_m
+    return m
 
 
 
@@ -103,7 +101,7 @@ def main():
     text_type = 'small_text.txt'
     with open(text_type, 'r') as file:
         text = file.read()
-        encoded_text = encode(text, False).encoded_text
+        encoded_text = encode(text, True).encoded_text
         print('Маленький текст')
         print(f"Количество информации исходного текста: {len(text) * 8} бит")
         print(f"Количество информации закодированного текста: {len(encoded_text)} бит")
