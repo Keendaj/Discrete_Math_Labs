@@ -101,42 +101,66 @@ def decode(data: ReturnData, need_to_print=False) -> str:
         if current_code in codes_dict.keys():
             found_char = codes_dict[current_code]
             decoded_text += found_char
-            current_code = ""
             if need_to_print:
-                print(f"""
-                      Найден код: {current_code},
-                      ему соответствует {
-                          'Символ пробела' if found_char == ' ' else found_char
-                        }
-                """)
+                print(f"Найден код: {current_code}, ему соответствует {'Символ пробела' if found_char == ' ' else found_char}")
                 print(f"Текст на данный момент: {decoded_text}")
+            current_code = ""
     return decoded_text
 
 
 def main():
-    text_type = 'small_text.txt'
-    with open(text_type, 'rb') as file:  # Открываем в бинарном режиме
+    text_type = 'test'
+    with open(text_type + '.txt', 'rb') as file:  # Открываем в бинарном режиме
         data = file.read()
         original_bits = len(data) * 8  # Реальный размер в битах
         text = data.decode('utf-8')    # Декодируем в строку для обработки
 
     encoded_data = encode(text, True)
     encoded_text = encoded_data.encoded_text
-    print('Маленький текст')
+    with open(text_type + '_encoded.txt', 'wb') as file:
+        file.write(encoded_text.encode('utf-8'))
+        print(f"Закодированный текст сохранён в {text_type + '_encoded.txt'}")
+    k = (original_bits - len(encoded_text)) / original_bits * 100
     print(f"Вес исходного текста: {original_bits} бит")
     print(f"Вес закодированного текста: {len(encoded_text)} бит")
+    print(f"Коэффициент сжатия: {k:.2f}%")
 
-    text_type = 'large_text.txt'
-    with open(text_type, 'rb') as file:  # Открываем в бинарном режиме
+    decoded_text = decode(encoded_data, False)
+    with open(text_type + '_decoded.txt', 'wb') as file:
+        file.write(decoded_text.encode('utf-8'))
+        print(f"Декодированный текст сохранён в {text_type + '_decoded.txt'}")
+
+    text_type = 'medium_text'
+    with open(text_type + '.txt', 'rb') as file:
         data = file.read()
         original_bits = len(data) * 8
         text = data.decode('utf-8', errors='ignore')
 
     encoded_data = encode(text, False)
     encoded_text = encoded_data.encoded_text
-    print('Большой текст')
+    with open(text_type + '_encoded.txt', 'wb') as file:
+        file.write(encoded_text.encode('utf-8'))
+        print(f"Закодированный текст сохранён в {text_type + '_encoded.txt'}")
+    k = (original_bits - len(encoded_text)) / original_bits * 100
     print(f"Вес исходного текста: {original_bits} бит")
     print(f"Вес закодированного текста: {len(encoded_text)} бит")
+    print(f"Коэффициент сжатия: {k:.2f}%")
+
+    text_type = 'large_text'
+    with open(text_type + '.txt', 'rb') as file:
+        data = file.read()
+        original_bits = len(data) * 8
+        text = data.decode('utf-8', errors='ignore')
+
+    encoded_data = encode(text, False)
+    encoded_text = encoded_data.encoded_text
+    with open(text_type + '_encoded.txt', 'wb') as file:
+        file.write(encoded_text.encode('utf-8'))
+        print(f"Закодированный текст сохранён в {text_type + '_encoded.txt'}")
+    k = (original_bits - len(encoded_text)) / original_bits * 100
+    print(f"Вес исходного текста: {original_bits} бит")
+    print(f"Вес закодированного текста: {len(encoded_text)} бит")
+    print(f"Коэффициент сжатия: {k:.2f}%")
 
 
 if __name__ == "__main__":
