@@ -3,6 +3,7 @@ from typing import List, Tuple
 import struct
 import random
 import os
+import time
 
 class TreeNode:
     def __init__(self, char=None):
@@ -251,11 +252,14 @@ def decode(tree_filename: str, encoded_filename: str, need_to_print=False):
 
     decoded_text = ""
     current_node = root
-
     for bit in encoded_text:
         if bit == '0':
+            if need_to_print:
+                print("0", end =" ")
             current_node = current_node.left
         else:
+            if need_to_print:
+                print("1", end =" ")
             current_node = current_node.right
 
         if current_node and current_node.is_leaf():
@@ -264,7 +268,7 @@ def decode(tree_filename: str, encoded_filename: str, need_to_print=False):
             if need_to_print:
                 print(f"Найден символ: {'Символ пробела' if found_char == ' ' else found_char}")
             current_node = root
-
+        
     decoded_filename = encoded_filename.replace('_encoded.bin', '_decoded.txt')
     with open(decoded_filename, 'wb') as decoded_file:
         decoded_file.write(decoded_text.encode('utf-8'))
@@ -324,51 +328,111 @@ def generate_ascii_text(num_words, filename):
     except UnicodeEncodeError:
         print("✗ Ошибка: найден не-ASCII символ")
 
-
 def main():
     generate_ascii_text(500, 'medium_text.txt')
     generate_ascii_text(1500, 'large_text.txt')
 
-    texts = ['large_text.txt', 'medium_text.txt', 'test.txt']
+    print("Программа для сжатия и распаковки файлов")
+    print("Доступные команды:")
+    print("  compress <filename> [--show] - сжать файл (--show для отображения дерева кодов)")
+    print("  decompress <tree_file> <encoded_file> [--show] - распаковать файл (--show для отображения дерева кодов)")
+    print("  exit                   - выйти из программы")
+    print()
     
-    for filename in texts:
-        print(f"\n{'='*50}")
-        print(f"Обработка файла: {filename}")
-        print(f"{'='*50}")
-        
-        original_size = os.path.getsize(filename)
-        
-        encode(filename)
-        
-        tree_filename = filename.replace('.txt', '_codetree.bin')
-        encoded_filename = filename.replace('.txt', '_encoded.bin')
-        tree_size = os.path.getsize(tree_filename)
-        encoded_size = os.path.getsize(encoded_filename)
+    while True:
+        try:
+            command = input("Введите команду: ").strip().split()
+            
+            if not command:
+                continue
+                
+            if command[0] == "exit":
+                print("Выход из программы...")
+                break
+                
+            elif command[0] == "compress":
+                if len(command) < 2:
+                    print("Ошибка: Используйте: compress <filename> [--show]")
+                    continue
+                    
+                filename = command[1]
+                show_tree = "--show" in command
+                
+                if not os.path.exists(filename):
+                    print(f"Ошибка: Файл '{filename}' не найден")
+                    continue
+                    
+                try:
+                    encode(filename, show_tree)
+                    
+                    original_size = os.path.getsize(filename)
+                    tree_filename = filename.replace('.txt', '_codetree.bin')
+                    encoded_filename = filename.replace('.txt', '_encoded.bin')
+                    tree_size = os.path.getsize(tree_filename)
+                    encoded_size = os.path.getsize(encoded_filename)
+                    
+                    print(f"\nСжатие завершено успешно!")
+                    print(f"Исходный размер: {original_size} байт")
+                    print(f"Размер дерева кодов: {tree_size} байт")
+                    print(f"Размер сжатого текста: {encoded_size} байт")
+                    print(f"Общий размер после сжатия: {tree_size + encoded_size} байт")
+                    print(f"Коэффициент сжатия: {(1 - (tree_size + encoded_size) / original_size) * 100:.2f}%")
+                    print(f"Созданы файлы: {tree_filename}, {encoded_filename}")
+                    
+                except Exception as e:
+                    print(f"Ошибка при сжатии: {e}")
+                    
+            elif command[0] == "decompress":
+                if len(command) < 3:
+                    print("Ошибка: Используйте: decompress <tree_file> <encoded_file> [--show]")
+                    continue
+                    
+                tree_file = command[1]
+                encoded_file = command[2]
+                show_tree = "--show" in command
+                
+                if not os.path.exists(tree_file):
+                    print(f"Ошибка: Файл дерева '{tree_file}' не найден")
+                    continue
+                    
+                if not os.path.exists(encoded_file):
+                    print(f"Ошибка: Сжатый файл '{encoded_file}' не найден")
+                    continue
+                    
+                try:
+                    base_name = tree_file.replace('_codetree.bin', '')
+                    if base_name == tree_file:
+                        base_name = encoded_file.replace('_encoded.bin', '')
+                    
+                    decode(tree_file, encoded_file, show_tree)
+                    
+                    decoded_file = base_name + '_decoded.txt'
+                    print(f"\nРаспаковка завершена успешно!")
+                    print(f"Создан файл: {decoded_file}")
 
-        decode(tree_filename, encoded_filename)
-        
-        with open(filename, 'r', encoding='ascii') as f:
-            original_text = f.read()
-        
-        with open(filename.replace('.txt', '_decoded.txt'), 'r', encoding='ascii') as f:
-            decoded_text = f.read()
-        
-        texts_match = original_text == decoded_text
-        
-        print(f"\nРезультаты для {filename}:")
-        print(f"Исходный размер: {original_size} байт")
-        print(f"Размер дерева кодов: {tree_size} байт")
-        print(f"Размер закодированного текста: {encoded_size} байт")
-        print(f"Общий размер после кодирования: {tree_size + encoded_size} байт")
-        print(f"Коэффициент сжатия: {(1 - (tree_size + encoded_size) / original_size) * 100:.2f}%")
-        
-        if texts_match:
-            print("Тексты идентичны - декодирование успешно!")
-        else:
-            print("Тексты не совпадают - ошибка декодирования!")
-            print(f"Длина исходного: {len(original_text)} символов")
-            print(f"Длина декодированного: {len(decoded_text)} символов")
+                    original_file = base_name + '.txt'
+                    if os.path.exists(original_file):
+                        with open(original_file, 'r', encoding='ascii') as f:
+                            original_text = f.read()
+                        with open(decoded_file, 'r', encoding='ascii') as f:
+                            decoded_text = f.read()
+                        
+                        if original_text == decoded_text:
+                            print("Целостность данных проверена: файлы идентичны")
+                        else:
+                            print("Предупреждение: распакованный файл отличается от исходного")
+                    
+                except Exception as e:
+                    print(f"Ошибка при распаковке: {e}")
+                    
+            else:
+                print("Ошибка: Неизвестная команда. Доступные команды: compress, decompress, exit")
+                
+        except KeyboardInterrupt:
+            print("\n\nВыход из программы...")
+            break
+        except Exception as e:
+            print(f"Неожиданная ошибка: {e}")
 
 if __name__ == "__main__":
-
     main()
