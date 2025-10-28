@@ -132,7 +132,7 @@ public:
         }
     }
 
-    bool tryKuhn(int start) {
+    bool aug(int start) {
         std::vector<char> usedL(nLeft + 1, 0);
         std::vector<char> usedR(nRight + 1, 0);
 
@@ -198,7 +198,7 @@ public:
                 bool inMatching = false;
                 for (int r = 1; r <= nRight; ++r) if (matchRight[r] == u) { inMatching = true; break; }
                 if (!inMatching) {
-                    if (tryKuhn(u)) matchCount++;
+                    if (aug(u)) matchCount++;
                 }
             }
 
